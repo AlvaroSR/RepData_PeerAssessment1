@@ -1,5 +1,5 @@
 # Reproducible Research: Peer Assessment 1
-Álvaro Sánchez Rodríguez  
+Álvaro  
 September 2015  
 
 #Introduction 
@@ -30,7 +30,7 @@ In order to replicate or reproduce the analyses, I think that it must be useful 
 
 1. Platform: x86_64-pc-linux-gnu
 2. R version: R version 3.2.2 (2015-08-14)
-3. Date: 2015-09-19
+3. Date: 2015-09-20
 
 And as no english native speaker I decided to change my configuration to  by means of `en_US.UTF-8`:
 
@@ -165,6 +165,118 @@ The 5-minute interval which shows the maximum number of steps (on average across
 
 Note that there are a number of days/intervals where there are missing values (coded as `NA`). The presence of missing days may introduce bias into some calculations or summaries of the data.
 
+1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with `NA`s)
+
+```r
+sum(is.na(data_act$steps))
+```
+
+```
+## [1] 2304
+```
+2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc. I decided to use **the mean for the day** where `NA` steps values were in.
+ - Group data by julian day
+ - Summarise data by day and I calculated `sum` and `mean` for steps values.
+ - Merge `data_act` and `steps_per_day` data frames by julian day values.
+ - Change `NA`values by `mean`values
+
+3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+```r
+by_day=group_by(data_act,julian)
+
+steps_per_day=summarise(by_day,sumatory=sum(steps, na.rm=TRUE),average=mean(steps))
+steps_per_day$average=ifelse(is.na(steps_per_day$average),0,steps_per_day$average)
+
+data_act_na=merge(data_act,steps_per_day,by="julian")
+
+data_act_na[is.na("steps"),"steps"]=data_act_na[is.na("steps"),"average"]
+```
+
+4. Make a histogram of the total number of steps taken each day and calculate and report the mean and median total number of steps taken per day.
+
+
+```r
+by_day_na=group_by(data_act_na,julian)
+steps_per_day_na=summarise(by_day_na,sumatory=sum(steps, na.rm=TRUE),average=mean(steps))
+steps_per_day_na=filter(steps_per_day, sumatory!=0)
+
+ggplot(data=steps_per_day_na,aes(x=sumatory))+
+        geom_histogram(fill="cadetblue",colour="black")+
+        ylab("Count")+xlab("Total number of steps per day (NA included)")+
+        theme_bw()+
+        theme(panel.grid.minor=element_blank(),
+              axis.text.x = element_text(colour="grey20",size=11,angle=0,hjust=.5,vjust=.5,face="bold"),
+              axis.text.y = element_text(colour="grey20",size=11,angle=0,hjust=.5,vjust=.5,face="bold"),
+              axis.title.y = element_text(colour="grey20",size=15,angle=90,hjust=.5,vjust=1,face="bold"),
+              axis.title.x = element_text(colour="grey20",size=15,angle=0,hjust=.5,vjust=-0.2,face="bold"),
+              legend.key=element_blank()
+        )
+```
+
+<img src="PA1_files/figure-html/unnamed-chunk-14-1.png" title="" alt="" style="display: block; margin: auto;" />
+
+```r
+mean(steps_per_day_na$sumatory)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
+median(steps_per_day_na$sumatory)
+```
+
+```
+## [1] 10765
+```
+
+*Do these values differ from the estimates from the first part of the assignment?*
+ 
+ No. Both mean and median values are exactly equal to those reported for non NAN included data.
+ 
+ *What is the impact of imputing missing data on the estimates of the total daily number of steps?*
+ 
+ No one, there is not any effect over estimations of total daily number of steps.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+
+
+```r
+data_act$weekday=ifelse(weekdays(data_act$date)%in%c("Saturday","Sunday"),"weekend","weekday")
+data_act$weekday=factor(data_act$weekday)
+```
+
+2. Make a panel plot containing a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+
+
+```r
+by_weekday=group_by(data_act,weekday,interval)
+steps_per_day_int=summarise(by_weekday,steps_mean=mean(steps, na.rm = T),
+                            steps_sum=sum(steps, na.rm = T))
+
+ggplot(steps_per_day_int,aes(x=interval,y=steps_mean, colour=weekday))+
+        geom_line()+
+        facet_grid(weekday~.)+
+        ylab("Interval (min)")+xlab("Total number of steps per day")+
+        theme_bw()+
+        theme(panel.grid.minor=element_blank(),
+              axis.text.x = element_text(colour="grey20",size=11,angle=0,hjust=.5,vjust=.5,face="bold"),
+              axis.text.y = element_text(colour="grey20",size=11,angle=0,hjust=.5,vjust=.5,face="bold"),
+              axis.title.y = element_text(colour="grey20",size=15,angle=90,hjust=.5,vjust=1,face="bold"),
+              axis.title.x = element_text(colour="grey20",size=15,angle=0,hjust=.5,vjust=-0.2,face="bold"),
+              strip.text.y= element_text(colour="grey20",size=11,vjust=.5,angle=0,face="bold"),
+              legend.key=element_blank(),
+              legend.position="none",
+              strip.background=element_rect(fill="WhiteSmoke"),
+              strip.background=element_blank()
+        )
+```
+
+<img src="PA1_files/figure-html/unnamed-chunk-16-1.png" title="" alt="" style="display: block; margin: auto;" />
+
+Different patterns between weekdays and weekends are evident. During weekend the total number of steps are extended during all day, whereas weekdays show a evident maximum number of steps over 13 H 55 S. On the ohter hand, during weekdays the activity begins more early in the morning than in weekend days. All these differences could be attributed to different behaviour patterns of workday-freeday. 
