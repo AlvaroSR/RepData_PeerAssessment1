@@ -1,5 +1,5 @@
 # Reproducible Research: Peer Assessment 1
-Álvaro  
+Álvaro SR  
 September 2015  
 
 #Introduction 
@@ -15,6 +15,7 @@ Before to begin with the assessment, we are loading libraries requiered. In this
 
 
 ```r
+libraries_load=c("ggplot2","dplyr","lubridate")
 ipak <- function(pkg){
         new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
         if (length(new.pkg)) 
@@ -43,7 +44,7 @@ Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
 # Loading and preprocessing the data
 
-First of all we established our working directory by means of `getwd()` and unzip and load data:
+First of all we establish our working directory by means of `setwd()` and unzip and load data:
 
 
 ```r
@@ -115,7 +116,7 @@ The mean and median of the total number of steps taken per day are **10766.19** 
 
 ## What is the average daily activity pattern?
 
-1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis).
+1. Make a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis).
 
 
 ```r
@@ -164,15 +165,18 @@ Note that there are a number of days/intervals where there are missing values (c
 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with `NA`s)
 
 ```r
-sum(is.na(data_act$steps))
+nas=sum(is.na(data_act$steps))
+nas
 ```
 
 ```
 ## [1] 2304
 ```
-2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc. I decided to use **the mean for the day** where `NA` steps values were in.
+The number of missing values in the dataset are **2304**.
+
+2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc. I decided to use **the mean for the day** where `NA` steps values are in.
  - Group data by julian day
- - Summarise data by day and I calculated `sum` and `mean` for steps values.
+ - Summarise data by day and calculate `sum` and `mean` for steps values.
  - Merge `data_act` and `steps_per_day` data frames by julian day values.
  - Change `NA`values by `mean`values
 
@@ -230,7 +234,7 @@ median(steps_per_day_na$sumatory)
 
 *Do these values differ from the estimates from the first part of the assignment?*
  
- No. Both mean and median values are exactly equal to those reported for non NAN included data.
+ No. Both mean and median values are exactly equal to those reported for non `NA` included data.
  
  *What is the impact of imputing missing data on the estimates of the total daily number of steps?*
  
@@ -275,4 +279,5 @@ ggplot(steps_per_day_int,aes(x=interval,y=steps_mean, colour=weekday))+
 
 <img src="PA1_template_files/figure-html/unnamed-chunk-16-1.png" title="" alt="" style="display: block; margin: auto;" />
 
-Different patterns between weekdays and weekends are evident. During weekend the total number of steps are extended during all day, whereas weekdays show a evident maximum number of steps over 13 H 55 S. On the ohter hand, during weekdays the activity begins more early in the morning than in weekend days. All these differences could be attributed to different behaviour patterns of workday-freeday. 
+
+Different patterns between weekdays and weekends are evident. During weekend the total number of steps are extended during all day, whereas weekdays show a evident maximum number of steps over 13 H 55 M. On the ohter hand, during weekdays the activity begins more early in the morning than in weekend days. All these differences could be attributed to different behaviour patterns of workdays and freedays. 
